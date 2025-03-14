@@ -1,0 +1,13 @@
+# Standard development exclusions
+node_modules/
+dist/
+build/
+.cache/
+.DS_Store
+.env
+.env.local
+*.log
+
+# Editor/IDE specific
+.vscode/
+.idea/
