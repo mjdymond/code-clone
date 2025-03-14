@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Scraper Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #333;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .result {
+      margin-top: 20px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 4px;
+    }
+    .loading {
+      display: none;
+      margin-top: 10px;
+    }
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Job Scraper Test</h1>
+  
+  <div class="form-group">
+    <label for="jobUrl">Job Posting URL:</label>
+    <input type="text" id="jobUrl" placeholder="https://example.com/job-posting">
+  </div>
+  
+  <button id="scrapeButton">Scrape Job</button>
+  
+  <div class="loading" id="loading">Scraping job posting...</div>
+  <div class="error" id="error"></div>
+  
+  <div class="result" id="result" style="display: none;">
+    <h2>Scraped Job Information</h2>
+    <p><strong>Title:</strong> <span id="jobTitle"></span></p>
+    <p><strong>Company:</strong> <span id="jobCompany"></span></p>
+    <h3>Description:</h3>
+    <div id="jobDescription"></div>
+  </div>
+
+  <script>
+    document.getElementById('scrapeButton').addEventListener('click', async () => {
+      const jobUrl = document.getElementById('jobUrl').value.trim();
+      if (!jobUrl) {
+        document.getElementById('error').textContent = 'Please enter a job URL';
+        return;
+      }
+      
+      document.getElementById('error').textContent = '';
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('result').style.display = 'none';
+      
+      try {
+        // Use corsproxy.io to bypass CORS restrictions
+        const corsProxyUrl = `https://corsproxy.io/?${encodeURIComponent(jobUrl)}`;
+        
+        console.log('Fetching job posting from:', corsProxyUrl);
+        
+        const response = await fetch(corsProxyUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch URL: ${response.status} ${response.statusText}`);
+        }
+        
+        const html = await response.text();
+        console.log('Successfully fetched HTML content, length:', html.length);
+        
+        // Extract job information
+        const jobInfo = extractJobInfo(html, jobUrl);
+        
+        // Display the results
+        document.getElementById('jobTitle').textContent = jobInfo.title;
+        document.getElementById('jobCompany').textContent = jobInfo.company;
+        document.getElementById('jobDescription').textContent = jobInfo.description;
+        document.getElementById('result').style.display = 'block';
+      } catch (error) {
+        console.error('Error scraping job posting:', error);
+        document.getElementById('error').textContent = `Error: ${error.message}`;
+      } finally {
+        document.getElementById('loading').style.display = 'none';
+      }
+    });
+    
+    function extractJobInfo(html, url) {
+      // Extract job title from HTML using multiple patterns
+      const titlePatterns = [
+        /<title>([^|<]+)/i,
+        /<h1[^>]*>([^<]+)<\/h1>/i,
+        /class="[^"]*job-title[^"]*"[^>]*>([^<]+)<\/[^>]+>/i,
+        /class="[^"]*title[^"]*"[^>]*>([^<]+)<\/[^>]+>/i,
+        /id="[^"]*job-title[^"]*"[^>]*>([^<]+)<\/[^>]+>/i,
+        /property="og:title"[^>]*content="([^"]+)"/i
+      ];
+      
+      // Extract company name from HTML using multiple patterns
+      const companyPatterns = [
+        /<title>[^|<]+[|]\s*([^<]+)<\/title>/i,
+        /class="[^"]*company[^"]*"[^>]*>([^<]+)<\/[^>]+>/i,
+        /class="[^"]*employer[^"]*"[^>]*>([^<]+)<\/[^>]+>/i,
+        /property="og:site_name"[^>]*content="([^"]+)"/i
+      ];
+      
+      // Extract job description from HTML using multiple patterns
+      const descriptionPatterns = [
+        /<div[^>]*class="[^"]*description[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+        /<div[^>]*class="[^"]*job-description[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+        /<div[^>]*class="[^"]*details[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+        /<section[^>]*class="[^"]*description[^"]*"[^>]*>([\s\S]*?)<\/section>/i,
+        /property="og:description"[^>]*content="([^"]+)"/i
+      ];
+      
+      // Try each pattern until we find a match
+      const findMatch = (patterns) => {
+        for (const pattern of patterns) {
+          const match = html.match(pattern);
+          if (match && match[1]) {
+            return match[1];
+          }
+        }
+        return null;
+      };
+      
+      const titleMatch = findMatch(titlePatterns);
+      const companyMatch = findMatch(companyPatterns);
+      const descriptionMatch = findMatch(descriptionPatterns);
+      
+      console.log('Extraction results:', { 
+        titleFound: !!titleMatch, 
+        companyFound: !!companyMatch, 
+        descriptionFound: !!descriptionMatch 
+      });
+      
+      // Clean and extract text from HTML
+      const cleanHtml = (htmlContent) => {
+        if (!htmlContent) return '';
+        return htmlContent
+          .replace(/<[^>]*>/g, " ")           // Remove HTML tags
+          .replace(/&nbsp;/g, " ")            // Replace non-breaking spaces
+          .replace(/&amp;/g, "&")              // Replace ampersands
+          .replace(/&lt;/g, "<")               // Replace less than
+          .replace(/&gt;/g, ">")               // Replace greater than
+          .replace(/&quot;/g, '"')             // Replace quotes
+          .replace(/\s+/g, " ")               // Normalize whitespace
+          .trim();                             // Trim leading/trailing whitespace
+      };
+      
+      // Extract URL components as fallback
+      const urlObj = new URL(url);
+      const pathParts = urlObj.pathname.split("/").filter(Boolean);
+      const lastPathPart = pathParts[pathParts.length - 1]?.replace(/-|_/g, " ").trim();
+      const domainParts = urlObj.hostname.split(".");
+      const domain = domainParts.length > 1 ? domainParts[domainParts.length - 2] : '';
+      const domainName = domain.charAt(0).toUpperCase() + domain.slice(1);
+      
+      return {
+        title: titleMatch ? cleanHtml(titleMatch) : lastPathPart || 'Job Title Not Found',
+        company: companyMatch ? cleanHtml(companyMatch) : domainName || 'Company Not Found',
+        description: descriptionMatch ? cleanHtml(descriptionMatch) : 'Job description not found.'
+      };
+    }
+  </script>
+</body>
+</html>

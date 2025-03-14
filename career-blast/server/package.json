@@ -1,0 +1,33 @@
+{
+  "name": "resume-optimizer-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "supabase start && supabase functions serve --no-verify-jwt",
+    "build": "tsc",
+    "lint": "eslint . --ext ts --report-unused-disable-directives --max-warnings 0",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.3",
+    "cheerio": "^1.0.0-rc.12",
+    "docx-parser": "^0.2.1",
+    "openai": "^4.24.7",
+    "pdf-parse": "^1.1.1",
+    "pdfjs-dist": "^4.0.379",
+    "puppeteer": "^21.7.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@supabase/functions-js": "^2.1.5",
+    "@types/node": "^20.11.5",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "eslint": "^8.55.0",
+    "supabase": "^1.131.5",
+    "typescript": "^5.2.2",
+    "vitest": "^1.2.1"
+  }
+}
