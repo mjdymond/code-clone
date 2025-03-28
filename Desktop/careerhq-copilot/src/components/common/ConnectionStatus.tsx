@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { useCareerHQConnection } from '@/hooks/useCareerHQConnection';

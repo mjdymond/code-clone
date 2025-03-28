@@ -1,101 +1,200 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { AgentState } from '@/types/agent';
-import { CpuIcon, ChevronUp, ChevronDown, RotateCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Brain, ChevronDown, ChevronUp, Lightbulb, LucideIcon } from 'lucide-react';
+import { useCareerAgent } from '@/hooks/useCopilotIntegration';
+import { cn } from '@/lib/utils';
 
 interface AgentThinkingProps {
   agentName: string;
-  state: AgentState;
   title?: string;
+  icon?: LucideIcon;
+  initiallyExpanded?: boolean;
+  maxLines?: number;
+  className?: string;
 }
 
-export function AgentThinking({ agentName, state, title }: AgentThinkingProps) {
-  const [expanded, setExpanded] = useState(true);
-  const [lineCount, setLineCount] = useState(0);
+/**
+ * AgentThinking Component
+ * 
+ * Displays real-time agent reasoning with typing animation, collapsible interface,
+ * and visual indicators of state changes. This component is key to the transparency
+ * aspect of agent-native interfaces.
+ */
+export function AgentThinking({
+  agentName,
+  title = "Agent Reasoning",
+  icon: Icon = Brain,
+  initiallyExpanded = true,
+  maxLines = 10,
+  className
+}: AgentThinkingProps) {
+  const [isExpanded, setIsExpanded] = useState(initiallyExpanded);
+  const [isThinking, setIsThinking] = useState(false);
+  const [displayedThinking, setDisplayedThinking] = useState('');
+  const [insights, setInsights] = useState<string[]>([]);
   
-  if (!state.thinking || state.status !== 'thinking') {
-    return null;
-  }
-
-  // Count the lines in the thinking text once on component mount
+  // Connect to agent state via CopilotKit hook
+  const { state } = useCareerAgent({
+    name: agentName,
+    initialState: {
+      status: 'idle',
+      thinking: '',
+      insights: []
+    }
+  });
+  
+  // Extract thinking content from agent state
+  const thinkingContent = state.thinking || '';
+  
+  // Update displayed thinking with typing effect
   useEffect(() => {
-    if (state.thinking) {
-      setLineCount(state.thinking.split('\n').length);
-    }
-  }, [state.thinking]);
-  
-  // Create a typing animation effect by incrementally revealing the thinking text
-  const typingVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.01
+    if (thinkingContent && state.status === 'thinking') {
+      setIsThinking(true);
+      
+      // If current thinking is completely different, reset display
+      if (!thinkingContent.includes(displayedThinking) && thinkingContent.length > 0) {
+        setDisplayedThinking('');
       }
+      
+      // If there's more to show, animate it
+      if (displayedThinking.length < thinkingContent.length) {
+        const timer = setTimeout(() => {
+          setDisplayedThinking(thinkingContent.substring(0, displayedThinking.length + 5));
+        }, 10);
+        return () => clearTimeout(timer);
+      }
+    } else {
+      setIsThinking(false);
     }
-  };
-
-  const letterVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1 }
+  }, [thinkingContent, displayedThinking, state.status]);
+  
+  // Extract insights when they're available
+  useEffect(() => {
+    if (state.insights && Array.isArray(state.insights)) {
+      setInsights(state.insights);
+    }
+  }, [state.insights]);
+  
+  // Handle toggle expansion
+  const toggleExpansion = () => {
+    setIsExpanded(!isExpanded);
   };
   
   return (
-    <Card className="w-full bg-blue-50/50 border-blue-100 overflow-hidden">
+    <div className={cn(
+      "border rounded-lg shadow-sm overflow-hidden bg-white", 
+      className
+    )}>
+      {/* Header with toggle */}
       <div 
-        className="p-3 flex items-center justify-between cursor-pointer"
-        onClick={() => setExpanded(!expanded)}
+        className={cn(
+          "flex items-center justify-between px-4 py-3 cursor-pointer",
+          isThinking ? "bg-blue-50 border-b border-blue-100" : "bg-gray-50 border-b border-gray-100"
+        )}
+        onClick={toggleExpansion}
       >
-        <div className="flex items-center">
-          <RotateCw className="h-4 w-4 mr-2 text-blue-600 animate-spin" />
-          <span className="text-sm font-medium text-blue-700">
-            {title || `${agentName} is thinking...`}
-          </span>
+        <div className="flex items-center space-x-2">
+          <div className={cn(
+            "flex items-center justify-center rounded-full w-6 h-6",
+            isThinking ? "animate-pulse text-blue-500" : "text-gray-500"
+          )}>
+            <Icon size={16} />
+          </div>
+          <h3 className="font-medium text-gray-800">
+            {title} 
+            {isThinking && (
+              <span className="ml-2 text-blue-500 text-sm font-normal">
+                thinking<span className="animate-ellipsis">...</span>
+              </span>
+            )}
+          </h3>
         </div>
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-          {expanded ? (
-            <ChevronUp className="h-4 w-4 text-blue-500" />
-          ) : (
-            <ChevronDown className="h-4 w-4 text-blue-500" />
+        
+        <div className="flex items-center space-x-2">
+          {state.completion_percentage !== undefined && (
+            <span className="text-xs text-gray-500">{state.completion_percentage}%</span>
           )}
-        </Button>
+          {isExpanded ? (
+            <ChevronUp size={16} className="text-gray-500" />
+          ) : (
+            <ChevronDown size={16} className="text-gray-500" />
+          )}
+        </div>
       </div>
       
+      {/* Expandable content */}
       <AnimatePresence>
-        {expanded && (
+        {isExpanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
+            animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
+            className="overflow-hidden"
           >
-            <CardContent className="pt-0 pb-3">
-              <motion.div
-                className="bg-white p-3 rounded border border-blue-100 text-sm font-mono whitespace-pre-wrap overflow-auto max-h-60 text-gray-700"
-                variants={typingVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                {state.thinking.split('\n').map((line, lineIndex) => (
-                  <div key={lineIndex} className="mb-1">
-                    {line}
-                  </div>
-                ))}
-              </motion.div>
-              
-              {lineCount > 10 && (
-                <div className="text-xs text-blue-600 mt-2 text-right">
-                  {lineCount} lines of reasoning
+            {/* Thinking process visualization */}
+            {displayedThinking && (
+              <div className="p-4 bg-gray-50 border-b border-gray-100">
+                <div className="font-mono text-sm text-gray-700 whitespace-pre-line overflow-auto max-h-40">
+                  {displayedThinking}
                 </div>
-              )}
-            </CardContent>
+              </div>
+            )}
+            
+            {/* Insights visualization */}
+            {insights.length > 0 && (
+              <div className="p-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                  <Lightbulb size={14} className="mr-1 text-amber-500" />
+                  Key Insights
+                </h4>
+                <ul className="space-y-1">
+                  {insights.map((insight, index) => (
+                    <motion.li
+                      key={index}
+                      initial={{ opacity: 0, x: -5 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="text-sm text-gray-600 flex items-start"
+                    >
+                      <span className="mr-2 text-blue-500">•</span>
+                      {insight}
+                    </motion.li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {/* Empty state */}
+            {!displayedThinking && insights.length === 0 && (
+              <div className="p-4 text-center text-sm text-gray-500">
+                No thinking process recorded yet.
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
-    </Card>
+    </div>
+  );
+}
+
+// Add CSS for the ellipsis animation
+// Add this to your global CSS or a local style block
+export function AgentThinkingStyles() {
+  return (
+    <style jsx global>{`
+      @keyframes ellipsis {
+        0% { content: '.'; }
+        33% { content: '..'; }
+        66% { content: '...'; }
+      }
+      
+      .animate-ellipsis::after {
+        content: '';
+        animation: ellipsis 1.5s infinite;
+      }
+    `}</style>
   );
 }

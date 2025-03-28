@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run the hook validator to check for React hook issues
+npm run validate-hooks
+
+# Run linting
+npm run lint

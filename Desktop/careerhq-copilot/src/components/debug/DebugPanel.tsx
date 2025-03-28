@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import React from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -27,13 +28,21 @@ export function DebugPanel() {
   };
 
   // Log SSE events
-  useStore.subscribe(
-    (state, prevState) => {
-      if (state.isConnected !== prevState.isConnected) {
-        addEvent('connection', { status: state.isConnected ? 'connected' : 'disconnected' });
+  // Move subscription to useEffect to avoid side effects during render
+  useEffect(() => {
+    const unsubscribe = useStore.subscribe(
+      (state, prevState) => {
+        if (state.isConnected !== prevState.isConnected) {
+          addEvent('connection', { status: state.isConnected ? 'connected' : 'disconnected' });
+        }
       }
-    }
-  );
+    );
+    
+    // Clean up subscription when component unmounts
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   if (!isOpen) {
     return (

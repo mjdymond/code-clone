@@ -6,6 +6,7 @@
  */
 import { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
+import { getSafeStoreState } from './safeStore';
 
 interface CoAgentOptions<T> {
   name: string;
@@ -25,9 +26,21 @@ export function useMockCoAgent<T>({ name, initialState }: CoAgentOptions<T>): Co
   // Local state for when the store is not available
   const [localState, setLocalState] = useState<T>(initialState);
   
-  // Try to access store state and methods
-  const storeState = useStore(state => state.agentStates[name]);
-  const setAgentState = useStore(state => state.setAgentState);
+  // Try to access store state safely to prevent errors
+  let storeState;
+  let setAgentState;
+  
+  try {
+    // Get store state and agent update function
+    const store = getSafeStoreState();
+    storeState = store.agents?.[name];
+    setAgentState = store.setAgentState;
+  } catch (error) {
+    console.log('Store access error:', error);
+    // If store access fails, we'll use local state only
+    storeState = null;
+    setAgentState = null;
+  }
   
   // Use store state if available, otherwise use local state
   const state = (storeState || localState) as T;
@@ -35,8 +48,14 @@ export function useMockCoAgent<T>({ name, initialState }: CoAgentOptions<T>): Co
   // Update function that tries store first, falls back to local state
   const setState = (newState: Partial<T>) => {
     if (setAgentState) {
-      // If store is available, update through it
-      setAgentState(name, { ...state, ...newState });
+      try {
+        // If store is available, update through it
+        setAgentState(name, { ...state, ...newState });
+      } catch (error) {
+        console.log('Store update error:', error);
+        // If store update fails, update local state instead
+        setLocalState(prev => ({ ...prev, ...newState }));
+      }
     } else {
       // Otherwise update local state
       setLocalState(prev => ({ ...prev, ...newState }));
@@ -45,8 +64,13 @@ export function useMockCoAgent<T>({ name, initialState }: CoAgentOptions<T>): Co
   
   // When mounting, initialize store state if needed
   useEffect(() => {
+    // Only update store in effect, not during render
     if (setAgentState && !storeState) {
-      setAgentState(name, initialState);
+      try {
+        setAgentState(name, initialState);
+      } catch (error) {
+        console.log('Initial state set error:', error);
+      }
     }
   }, [name, initialState, setAgentState, storeState]);
   
