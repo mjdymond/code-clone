@@ -1,0 +1,54 @@
+JOHN SMITH
+Software Engineer
+San Francisco, CA | 555-123-4567 | john.smith@email.com | github.com/johnsmith
+
+PROFESSIONAL SUMMARY
+Innovative Software Engineer with 5+ years of experience developing scalable web applications. Expertise in React, Node.js, and cloud architecture. Passionate about creating elegant solutions to complex problems while maintaining high-quality code standards.
+
+SKILLS
+Languages: JavaScript, TypeScript, Python, SQL, HTML, CSS
+Frontend: React, Redux, Angular, Vue.js, Webpack, Sass
+Backend: Node.js, Express, Django, PostgreSQL, MongoDB
+Cloud: AWS (EC2, S3, Lambda), Docker, Kubernetes
+Tools: Git, GitHub Actions, Jest, Cypress, Agile methodologies
+
+EXPERIENCE
+
+Senior Software Engineer | TechCorp Inc. | 2021 - Present
+- Led development of a customer-facing portal that increased user engagement by 45%
+- Architected and implemented microservices architecture reducing API response time by 60%
+- Mentored junior developers and conducted code reviews to ensure quality and consistency
+- Optimized database queries resulting in 30% performance improvement across critical applications
+- Implemented CI/CD pipelines reducing deployment time from hours to minutes
+
+Software Engineer | WebSolutions LLC | 2018 - 2021
+- Developed responsive web applications using React and Node.js
+- Integrated third-party APIs and payment gateways for e-commerce platform
+- Created unit and integration tests achieving 90% code coverage
+- Implemented real-time features using WebSockets for collaborative editing platform
+- Collaborated with UX designers to implement intuitive user interfaces
+
+Junior Developer | CodeStart | 2016 - 2018
+- Assisted in maintenance and bug fixes for existing web applications
+- Implemented frontend features using jQuery and vanilla JavaScript
+- Participated in daily stand-ups and sprint planning meetings
+- Contributed to database schema design and optimization
+
+EDUCATION
+Bachelor of Science in Computer Science, State University, 2016
+- GPA: 3.8/4.0
+- Relevant coursework: Data Structures, Algorithms, Web Development, Database Systems
+
+CERTIFICATIONS
+- AWS Certified Solutions Architect (2023)
+- Professional Scrum Master I (2022)
+
+PROJECTS
+Inventory Management System
+- Built full-stack inventory management application using React and Node.js
+- Implemented barcode scanning functionality and real-time stock updates
+- Deployed using Docker and AWS for high availability
+
+Open Source Contributions
+- Contributed to several popular JavaScript libraries including React components
+- Fixed bugs and improved documentation for community projects

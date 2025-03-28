@@ -1,0 +1,50 @@
+Senior Frontend Engineer
+TechInnovate Inc.
+
+About Us:
+TechInnovate Inc. is a leading technology company building innovative SaaS products that help businesses streamline their operations. Our flagship product serves over 10,000 companies worldwide, and we're expanding our engineering team to support our rapid growth.
+
+Job Description:
+We're looking for a Senior Frontend Engineer to join our product team. The ideal candidate will have strong experience with modern JavaScript frameworks, particularly React, and a passion for building intuitive, performant user interfaces. You'll work closely with designers, product managers, and backend engineers to deliver features that delight our users.
+
+Responsibilities:
+- Design, build, and maintain high-quality frontend applications using React and TypeScript
+- Collaborate with designers to translate UI/UX wireframes into responsive, accessible implementations
+- Write clean, testable code with comprehensive unit and integration tests
+- Optimize application performance and ensure cross-browser compatibility
+- Participate in code reviews and mentor junior developers
+- Work with product managers to refine specifications and ensure timely delivery
+- Contribute to architectural decisions and help define frontend best practices
+
+Requirements:
+- 5+ years of professional software development experience
+- 3+ years of experience with React and modern JavaScript
+- Strong proficiency in TypeScript, HTML, and CSS
+- Experience with state management libraries (Redux, MobX, or similar)
+- Knowledge of frontend build tools and CI/CD pipelines
+- Familiarity with responsive design and cross-browser compatibility
+- Experience with testing frameworks (Jest, React Testing Library, Cypress)
+- Excellent problem-solving skills and attention to detail
+- Strong communication skills and ability to work in a collaborative environment
+
+Nice to Have:
+- Experience with GraphQL and Apollo Client
+- Knowledge of performance optimization techniques
+- Contributions to open-source projects
+- Experience with micro-frontend architecture
+- Familiarity with UX design principles
+- Experience with WebSocket or real-time applications
+
+Benefits:
+- Competitive salary and equity package
+- Comprehensive health, dental, and vision benefits
+- 401(k) matching
+- Flexible work schedule and remote options
+- Professional development budget
+- Paid parental leave
+- Regular team events and retreats
+
+Location:
+San Francisco, CA (Hybrid) or Remote (US-based)
+
+TechInnovate Inc. is an equal opportunity employer committed to building a diverse and inclusive workplace. We welcome applicants from all backgrounds and do not discriminate on the basis of race, color, religion, gender, sexual orientation, gender identity, national origin, age, disability, or any other protected characteristic.
