@@ -1,302 +1,166 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  ChevronRight, 
-  CheckCircle2, 
-  XCircle, 
-  AlertTriangle, 
-  ArrowLeftRight, 
-  ThumbsUp,
-  ThumbsDown
-} from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { useCareerApproval } from '@/hooks/useCopilotIntegration';
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Check, X } from "lucide-react";
 
-// Types for the improvement suggestions
-interface ResumeImprovement {
+interface ResumeChange {
+  description: string;
   section: string;
-  original: string;
-  improved: string;
-  impact: 'high' | 'medium' | 'low';
-  reasoning: string;
-}
-
-interface ResumeApprovalData {
-  improvements: ResumeImprovement[];
-  originalResume: string;
-  improvedResume: string;
+  importance: "low" | "medium" | "high";
 }
 
 interface ResumeApprovalProps {
-  data?: ResumeApprovalData;
-  onApprove?: (feedback: string, selections: number[]) => void;
-  onReject?: (feedback: string) => void;
-  className?: string;
+  original: string;
+  improved: string;
+  changes: ResumeChange[];
+  onApprove: () => void;
+  onReject: () => void;
 }
 
-/**
- * ResumeApproval Component
- * 
- * A human-in-the-loop interface for reviewing and approving suggested
- * improvements to a resume. Allows for selective approval of changes
- * and provides before/after comparison.
- */
 export function ResumeApproval({
-  data,
+  original,
+  improved,
+  changes,
   onApprove,
   onReject,
-  className
 }: ResumeApprovalProps) {
-  const [feedback, setFeedback] = useState('');
-  const [viewMode, setViewMode] = useState<'list' | 'comparison'>('list');
-  const [selectedImprovements, setSelectedImprovements] = useState<number[]>([]);
+  const [selectedChanges, setSelectedChanges] = useState<Record<number, boolean>>(
+    changes.reduce((acc, _, index) => ({ ...acc, [index]: true }), {})
+  );
   
-  // Sample data for testing
-  const sampleData: ResumeApprovalData = {
-    improvements: [
-      {
-        section: "Skills",
-        original: "Proficient in JavaScript and React",
-        improved: "Expert in JavaScript, React, TypeScript, and modern frontend frameworks",
-        impact: "high",
-        reasoning: "More specific skills showcase technical depth and match job requirements better."
-      },
-      {
-        section: "Experience",
-        original: "Developed web applications for clients",
-        improved: "Led development of responsive web applications resulting in 40% increase in user engagement",
-        impact: "medium",
-        reasoning: "Quantified achievements make accomplishments more concrete."
-      },
-      {
-        section: "Summary",
-        original: "Dedicated web developer with 5 years of experience",
-        improved: "Results-driven frontend engineer with 5 years of experience delivering high-performance web applications for enterprise clients",
-        impact: "medium",
-        reasoning: "More specific role and accomplishments in the summary provide better context."
-      },
-      {
-        section: "Education",
-        original: "B.S. in Computer Science",
-        improved: "B.S. in Computer Science with focus on Software Engineering",
-        impact: "low",
-        reasoning: "Adding specialization provides better context for education."
-      }
-    ],
-    originalResume: "# Professional Resume\n\n## Summary\nDedicated web developer with 5 years of experience\n\n## Skills\nProficient in JavaScript and React\n\n## Experience\n### Senior Developer, ABC Company\n* Developed web applications for clients\n* Worked in an agile team\n\n## Education\nB.S. in Computer Science",
-    improvedResume: "# Professional Resume\n\n## Summary\nResults-driven frontend engineer with 5 years of experience delivering high-performance web applications for enterprise clients\n\n## Skills\nExpert in JavaScript, React, TypeScript, and modern frontend frameworks\n\n## Experience\n### Senior Developer, ABC Company\n* Led development of responsive web applications resulting in 40% increase in user engagement\n* Implemented CI/CD pipeline reducing deployment time by 30%\n* Collaborated in cross-functional agile teams to deliver projects on time\n\n## Education\nB.S. in Computer Science with focus on Software Engineering"
+  const allSelected = Object.values(selectedChanges).every(value => value);
+  
+  const toggleChange = (index: number) => {
+    setSelectedChanges(prev => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
   };
   
-  // Use the provided data or fall back to sample data
-  const resumeData = data || sampleData;
-  
-  // Toggle selecting an improvement
-  const toggleSelection = (index: number) => {
-    if (selectedImprovements.includes(index)) {
-      setSelectedImprovements(selectedImprovements.filter(i => i !== index));
-    } else {
-      setSelectedImprovements([...selectedImprovements, index]);
-    }
-  };
-  
-  // Select all improvements
   const selectAll = () => {
-    setSelectedImprovements(resumeData.improvements.map((_, index) => index));
+    setSelectedChanges(
+      changes.reduce((acc, _, index) => ({ ...acc, [index]: true }), {})
+    );
   };
   
-  // Deselect all improvements
   const deselectAll = () => {
-    setSelectedImprovements([]);
+    setSelectedChanges(
+      changes.reduce((acc, _, index) => ({ ...acc, [index]: false }), {})
+    );
   };
   
-  // Handle approval
-  const handleApprove = () => {
-    if (onApprove) {
-      onApprove(feedback, selectedImprovements);
-    }
-  };
-  
-  // Handle rejection
-  const handleReject = () => {
-    if (onReject) {
-      onReject(feedback);
-    }
-  };
-  
-  // Get the impact color
-  const getImpactColor = (impact: 'high' | 'medium' | 'low') => {
-    switch (impact) {
-      case 'high': return 'bg-green-100 text-green-800 border-green-200';
-      case 'medium': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'low': return 'bg-gray-100 text-gray-800 border-gray-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  const getImportanceColor = (importance: string) => {
+    switch (importance) {
+      case "high":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "medium":
+        return "bg-amber-100 text-amber-800 border-amber-200";
+      default:
+        return "bg-blue-100 text-blue-800 border-blue-200";
     }
   };
   
   return (
-    <Card className={`overflow-hidden ${className}`}>
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border-b">
-        <h2 className="text-lg font-semibold text-gray-800">Resume Improvement Suggestions</h2>
-        <p className="text-sm text-gray-600 mt-1">
-          Review and approve suggested improvements to your resume
-        </p>
-      </div>
-      
-      {/* View Mode Tabs */}
-      <div className="flex border-b">
-        <button
-          className={`flex-1 py-3 px-4 text-sm font-medium ${viewMode === 'list' ? 'text-blue-600 border-b-2 border-blue-500' : 'text-gray-500 hover:text-gray-700'}`}
-          onClick={() => setViewMode('list')}
-        >
-          Improvement List
-        </button>
-        <button
-          className={`flex-1 py-3 px-4 text-sm font-medium ${viewMode === 'comparison' ? 'text-blue-600 border-b-2 border-blue-500' : 'text-gray-500 hover:text-gray-700'}`}
-          onClick={() => setViewMode('comparison')}
-        >
-          Before / After
-        </button>
-      </div>
-      
-      {/* Content */}
-      <div className="p-4">
-        {viewMode === 'list' ? (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center mb-2">
-              <div className="text-sm text-gray-500">
-                {selectedImprovements.length} of {resumeData.improvements.length} improvements selected
-              </div>
-              <div className="flex space-x-2">
-                <button 
-                  className="text-xs text-blue-600 hover:text-blue-800" 
-                  onClick={selectAll}
-                >
-                  Select all
-                </button>
-                <button 
-                  className="text-xs text-gray-600 hover:text-gray-800" 
-                  onClick={deselectAll}
-                >
-                  Clear
-                </button>
-              </div>
-            </div>
-            
-            {/* List of improvements */}
-            <div className="space-y-3">
-              {resumeData.improvements.map((improvement, index) => (
-                <motion.div 
-                  key={index}
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className={`border rounded-lg p-3 ${selectedImprovements.includes(index) ? 'border-blue-300 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
-                  onClick={() => toggleSelection(index)}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center">
-                        <div className={`text-xs font-medium px-2.5 py-0.5 rounded-full border ${getImpactColor(improvement.impact)}`}>
-                          {improvement.impact === 'high' ? 'High Impact' : improvement.impact === 'medium' ? 'Medium Impact' : 'Minor Impact'}
-                        </div>
-                        <div className="ml-2 text-sm font-medium text-gray-700">{improvement.section}</div>
-                      </div>
-                      
-                      <div className="mt-2 space-y-2">
-                        <div className="text-sm">
-                          <div className="text-xs text-gray-500 mb-1">Original:</div>
-                          <div className="text-gray-700 bg-gray-50 p-2 rounded border border-gray-200">{improvement.original}</div>
-                        </div>
-                        
-                        <div className="text-sm">
-                          <div className="text-xs text-gray-500 mb-1">Improved:</div>
-                          <div className="text-gray-700 bg-white p-2 rounded border border-gray-200 font-medium">{improvement.improved}</div>
-                        </div>
-                        
-                        <div className="text-xs text-gray-500 italic">
-                          <AlertTriangle size={12} className="inline mr-1 text-amber-500" />
-                          {improvement.reasoning}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="ml-3">
-                      {selectedImprovements.includes(index) ? (
-                        <CheckCircle2 size={20} className="text-blue-500" />
-                      ) : (
-                        <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+    <div className="space-y-6">
+      <div className="changes-list space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium">Suggested Improvements</h3>
+          <div className="flex gap-2">
+            <button
+              onClick={selectAll}
+              className="text-xs text-blue-600 hover:text-blue-800"
+            >
+              Select All
+            </button>
+            <button
+              onClick={deselectAll}
+              className="text-xs text-gray-600 hover:text-gray-800"
+            >
+              Deselect All
+            </button>
           </div>
-        ) : (
-          <div>
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <div className="text-sm font-medium text-gray-700">Original</div>
-              <ArrowLeftRight size={16} className="text-gray-400" />
-              <div className="text-sm font-medium text-blue-700">Improved</div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="border rounded-lg p-3 bg-gray-50">
-                <pre className="text-sm whitespace-pre-wrap font-mono text-gray-700">{resumeData.originalResume}</pre>
-              </div>
-              <div className="border border-blue-200 rounded-lg p-3 bg-blue-50">
-                <pre className="text-sm whitespace-pre-wrap font-mono text-gray-700">{resumeData.improvedResume}</pre>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-      
-      {/* Feedback textarea */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
-        <label htmlFor="feedback" className="block text-sm font-medium text-gray-700 mb-2">
-          Feedback (optional)
-        </label>
-        <Textarea
-          id="feedback"
-          value={feedback}
-          onChange={(e) => setFeedback(e.target.value)}
-          placeholder="Add any specific feedback or instructions..."
-          className="w-full h-24"
-        />
-      </div>
-      
-      {/* Footer with actions */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
-        <div className="text-sm text-gray-500">
-          {selectedImprovements.length} improvements selected
         </div>
         
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={handleReject}
-            className="flex items-center"
-          >
-            <ThumbsDown size={16} className="mr-2" />
-            Reject
-          </Button>
-          
-          <Button
-            onClick={handleApprove}
-            disabled={selectedImprovements.length === 0}
-            className="flex items-center bg-blue-600 hover:bg-blue-700"
-          >
-            <ThumbsUp size={16} className="mr-2" />
-            Apply {selectedImprovements.length} {selectedImprovements.length === 1 ? 'change' : 'changes'}
-          </Button>
+        <div className="divide-y">
+          {changes.map((change, index) => (
+            <div key={index} className="py-3 first:pt-0 last:pb-0">
+              <div className="flex items-start gap-3">
+                <div
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded ${
+                    selectedChanges[index]
+                      ? "bg-blue-500 text-white"
+                      : "border border-gray-300 bg-white"
+                  }`}
+                  onClick={() => toggleChange(index)}
+                >
+                  {selectedChanges[index] && <Check className="h-3 w-3" />}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-sm">{change.section}</span>
+                    <span
+                      className={`inline-block rounded-full px-2 py-0.5 text-xs border ${getImportanceColor(
+                        change.importance
+                      )}`}
+                    >
+                      {change.importance}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">{change.description}</p>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
-    </Card>
+      
+      <div className="resume-content">
+        <Tabs defaultValue="diff">
+          <TabsList className="w-full mb-4">
+            <TabsTrigger value="diff" className="flex-1">Side by Side</TabsTrigger>
+            <TabsTrigger value="original" className="flex-1">Original</TabsTrigger>
+            <TabsTrigger value="improved" className="flex-1">Improved</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="diff">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="border rounded p-3 bg-gray-50">
+                <h4 className="text-sm font-medium mb-2 text-gray-500">Original</h4>
+                <pre className="whitespace-pre-wrap text-sm font-mono">{original}</pre>
+              </div>
+              <div className="border rounded p-3 bg-gray-50">
+                <h4 className="text-sm font-medium mb-2 text-gray-500">Improved</h4>
+                <pre className="whitespace-pre-wrap text-sm font-mono">{improved}</pre>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="original">
+            <div className="border rounded p-3 bg-gray-50">
+              <pre className="whitespace-pre-wrap text-sm font-mono">{original}</pre>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="improved">
+            <div className="border rounded p-3 bg-gray-50">
+              <pre className="whitespace-pre-wrap text-sm font-mono">{improved}</pre>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+      
+      <div className="flex justify-end gap-3">
+        <Button variant="outline" onClick={onReject} className="gap-1">
+          <X className="h-4 w-4" />
+          Reject Changes
+        </Button>
+        <Button onClick={onApprove} className="gap-1">
+          <Check className="h-4 w-4" />
+          Apply Selected Changes
+        </Button>
+      </div>
+    </div>
   );
 }

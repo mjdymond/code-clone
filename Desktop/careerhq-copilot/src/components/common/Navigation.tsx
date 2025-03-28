@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { useStore } from '@/lib/store';
 import { ConnectionStatus } from './ConnectionStatus';
-import { FileText, Briefcase, MessageSquare, DollarSign, Menu, X, CpuIcon, Bug, Users } from 'lucide-react';
+import { FileText, Briefcase, MessageSquare, DollarSign, Menu, X, CpuIcon, Bug, Users, Layers } from 'lucide-react';
 
 export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -34,6 +34,12 @@ export function Navigation() {
       href: '/jobs',
       icon: Briefcase,
       current: pathname === '/jobs',
+    },
+    {
+      name: 'Demo',
+      href: '/demo',
+      icon: Layers,
+      current: pathname === '/demo' || pathname.startsWith('/demo/'),
     },
     {
       name: 'Agents',
